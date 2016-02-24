@@ -28,6 +28,11 @@ class Queue {
 		$this->name = $name;
 	}
 	
+	public function getName()
+	{
+		return $this->name;
+	}
+	
 	/**
 	 * @param Message $message
 	 */
@@ -38,7 +43,7 @@ class Queue {
 		 * add message to channel 
 		 */
 		
-		$this->client->lpush($this->name, $message);
+		$this->client->lpush($this->getName(), $message);
 	}
 	
 	/**
