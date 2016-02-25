@@ -71,6 +71,7 @@ class Queue
 		 * copy part of queue to other redis list
 		 */
 		$taskListUniqueName = $this->getName().':'.md5(microtime() . mt_rand());
+		
 		$queueName = $this->getName();
 		$timestamp = time();
 		
@@ -79,14 +80,19 @@ class Queue
 				local queueName = KEYS[2]
 				local size = KEYS[3]
 				local timestamp = KEYS[4]
+
+				local queueNameTaskList = queueName .. ":task_lists"
+
 				-- check if key is unique
 				local is_unique = redis.call("exists", taskListUniqueName)
 				if is_unique == 1 then return 0 end
 				
 				local messages = redis.call("lrange",queueName,0,size)
 				for key,message in pairs(messages) do
-					redis.call("hset",taskListUniqueName,message,timestamp)
+					redis.call("lpush",taskListUniqueName,message)
 				end
+				
+				redis.call("hset",queueNameTaskList,taskListUniqueName,timestamp)
 				redis.call("ltrim",queueName,size,-1)
 				return 1
 			';
