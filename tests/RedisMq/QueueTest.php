@@ -29,13 +29,22 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 		$name = 'phpunit_tests';
 		$queue = new \RedisMq\Queue($this->client, $name);
 
+		/**
+		 * clear queue
+		 */
+		$queue->getClient()->del($name);
+		
+		$length = $queue->getClient()->llen($name);
+		
 		$this->assertEquals($name, $queue->getName());
+		$this->assertEquals($length, 0);
 		
 		return $queue;
 	}
 
 	/**
 	 * @depends testQueueInit
+	 * @param \RedisMq\Queue $queue
 	 */
 	public function testAddMessage(\RedisMq\Queue $queue) {
 		$queue->addMessage($this->message);
@@ -46,8 +55,17 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 		$messageToCheck->setFromString($checkMessage[0]);
 		
 		$this->assertEquals($this->message, $messageToCheck);
+		
+		return $queue;
 	}
 			
-			
+	/**
+	 * @depends testAddMessage
+	 * @param \RedisMq\Queue $queue
+	 */
+	public function testGetTaskList(\RedisMq\Queue $queue)
+	{
+		$taskList = $queue->getTaskList(5);
+	}
 	
 }
