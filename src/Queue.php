@@ -28,9 +28,20 @@ class Queue {
 		$this->name = $name;
 	}
 	
+	/**
+	 * @return string
+	 */
 	public function getName()
 	{
 		return $this->name;
+	}
+	
+	/**
+	 * @return Client
+	 */
+	public function getClient()
+	{
+		return $this->client;
 	}
 	
 	/**
@@ -43,7 +54,7 @@ class Queue {
 		 * add message to channel 
 		 */
 		
-		$this->client->lpush($this->getName(), $message);
+		$this->client->lpush($this->getName(), $message->getAsString());
 	}
 	
 	/**
