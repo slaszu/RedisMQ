@@ -54,14 +54,14 @@ class Task {
 		
 		$taskListUniqueName = $this->getTaskList()->getName();
 		$queueName = $this->getTaskList()->getQueue()->getName();
+		$queueNameTaskList = $this->getTaskList()->getQueue()->getQueueTaskListsName();
 		$message = $this->getMessage()->getAsString();
 		
 		$script = '
 				local taskListUniqueName = KEYS[1]
 				local queueName = KEYS[2]
 				local message = KEYS[3]
-				
-				local queueNameTaskList = queueName .. "_task_lists"
+				local queueNameTaskList = KEYS[4]
 				
 				-- del task
 				redis.call("lrem",taskListUniqueName,0,message)
@@ -75,7 +75,7 @@ class Task {
 			';
 
 		$client = $this->getTaskList()->getQueue()->getClient();
-		$client->eval($script, 3, $taskListUniqueName, $queueName, $message);
+		$client->eval($script, 4, $taskListUniqueName, $queueName, $message, $queueNameTaskList);
 		
 		return true;
 	}

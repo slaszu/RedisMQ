@@ -1,3 +1,1 @@
-Implementation of pattern:
-
-http://redis.io/commands/rpoplpush#pattern-reliable-queue
+Implementation of Pattern "Reliable queue", using php and Redis

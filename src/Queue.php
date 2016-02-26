@@ -39,6 +39,13 @@ class Queue
 	}
 
 	/**
+	 * @return string
+	 */
+	public function getQueueTaskListsName() {
+		return $this->getName().'_task_lists';
+	}
+	
+	/**
 	 * @return Client
 	 */
 	public function getClient()
@@ -80,6 +87,8 @@ class Queue
 		$taskListUniqueName = $this->getName().':'.md5(microtime() . mt_rand());
 		
 		$queueName = $this->getName();
+		$queueNameTaskLists = $this->getQueueTaskListsName();
+		
 		$timestamp = time();
 		
 		$script = '
@@ -87,8 +96,7 @@ class Queue
 				local queueName = KEYS[2]
 				local size = KEYS[3]
 				local timestamp = KEYS[4]
-				
-				local queueNameTaskList = queueName .. "_task_lists"
+				local queueNameTaskList = KEYS[5]
 
 				-- check if key is unique
 				local is_unique = redis.call("exists", taskListUniqueName)
@@ -115,9 +123,9 @@ class Queue
 		/**
 		 * 2. create task list
 		 */
-		$res = $this->client->eval($script, 4, $taskListUniqueName, $queueName, $size, $timestamp);
+		$res = $this->client->eval($script, 5, $taskListUniqueName, $queueName, $size, $timestamp, $queueNameTaskLists);
 		if ($res == 0) {
-			throw new Exception("Task list '$taskListUniqueName' exists in list '$taskListsKey', very rare problem, try run process again !");
+			throw new Exception("Task list '$taskListUniqueName' exists, it is very rare problem, try run process again !");
 		} elseif ($res == 1) {
 			
 			return new TaskList($taskListUniqueName, $this);
