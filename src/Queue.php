@@ -60,6 +60,13 @@ class Queue
 	}
 
 	/**
+	 * @return int
+	 */
+	public function getLength() {
+		return $this->client->llen($this->getName());
+	}
+	
+	/**
 	 * Copy data from queue to new process list with given size
 	 * 
 	 * @param int $size
@@ -80,27 +87,27 @@ class Queue
 				local queueName = KEYS[2]
 				local size = KEYS[3]
 				local timestamp = KEYS[4]
-
-				local queueNameTaskList = queueName .. ":task_lists"
+				
+				local queueNameTaskList = queueName .. "_task_lists"
 
 				-- check if key is unique
 				local is_unique = redis.call("exists", taskListUniqueName)
 				if is_unique == 1 then return 0 end
 				
-				local messages = redis.call("lrange",queueName,0,size)
+				local messages = redis.call("lrange",queueName, - size, -1)
 				for key,message in pairs(messages) do
-					redis.call("lpush",taskListUniqueName,message)
+					redis.call("rpush",taskListUniqueName,message)
 				end
 				
 				redis.call("hset",queueNameTaskList,taskListUniqueName,timestamp)
-				redis.call("ltrim",queueName,size,-1)
+				redis.call("ltrim",queueName,0,size - 1) -- zero based index
 				return 1
 			';
 
 		/**
 		 * 1. check llen of queue
 		 */
-		if ($this->client->llen($queueName) == 0) {
+		if ( $this->getLength() == 0) {
 			throw new Exception("Queue '$queueName' is empty or not exists !");
 		}
 		
@@ -113,7 +120,7 @@ class Queue
 			throw new Exception("Task list '$taskListUniqueName' exists in list '$taskListsKey', very rare problem, try run process again !");
 		} elseif ($res == 1) {
 			
-			return new TaskList($taskListUniqueName);
+			return new TaskList($taskListUniqueName, $this);
 			
 		} else {
 			throw new Exception("Strange problem occured ! res = ".  var_export($res, true));
