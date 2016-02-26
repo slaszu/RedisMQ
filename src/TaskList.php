@@ -47,7 +47,7 @@ class TaskList
 	 * @return int
 	 */
 	public function getLength() {
-		return $this->queue->getClient()->llen($this->getName());
+		return $this->getQueue()->getClient()->llen($this->getName());
 	}
 	
 	/**
@@ -58,7 +58,7 @@ class TaskList
 		/**
 		 * get first
 		 */
-		$checkMessage = $this->queue->getClient()->lrange($this->getName(),-1,-1); // get last item from list
+		$checkMessage = $this->getQueue()->getClient()->lrange($this->getName(),-1,-1); // get last item from list
 		
 		$messageToCheck = new \RedisMq\Message();
 		$messageToCheck->setFromString($checkMessage[0]);

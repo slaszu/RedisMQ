@@ -38,7 +38,7 @@ class Task {
 	 * @return TaskList
 	 */
 	public function getTaskList() {
-		return $this->getTaskList();
+		return $this->taskList;
 	}
 	
 	/**
@@ -46,6 +46,38 @@ class Task {
 	 */
 	public function confirm() {
 		
+		/**
+		 * clear task and task list
+		 * 1. del task
+		 * 2. if it was last task then del task list from "queue task list"
+		 */
+		
+		$taskListUniqueName = $this->getTaskList()->getName();
+		$queueName = $this->getTaskList()->getQueue()->getName();
+		$message = $this->getMessage()->getAsString();
+		
+		$script = '
+				local taskListUniqueName = KEYS[1]
+				local queueName = KEYS[2]
+				local message = KEYS[3]
+				
+				local queueNameTaskList = queueName .. "_task_lists"
+				
+				-- del task
+				redis.call("lrem",taskListUniqueName,0,message)
+				
+				-- del task list from queue task list
+				if (redis.call("exists",taskListUniqueName) == 0) then
+					redis.call("hdel",queueNameTaskList,taskListUniqueName)
+				end
+				
+				return 1
+			';
+
+		$client = $this->getTaskList()->getQueue()->getClient();
+		$client->eval($script, 3, $taskListUniqueName, $queueName, $message);
+		
+		return true;
 	}
 	
 }

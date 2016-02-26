@@ -121,6 +121,33 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 		$task = $taskList->getTask();
 		$message = $task->getMessage();
 		$this->assertEquals($message, self::$message[0], 'check first task again');
+		
+		return $taskList;
+	}
+	
+	/**
+	 * @depends testGetFirstTask
+	 * @param \RedisMq\TaskList $taskList
+	 */
+	public function testTasksConfirm(\RedisMq\TaskList $taskList)
+	{
+		$qty = $taskList->getLength();
+		
+		for($i = 1; $i <= $qty; $i++) {
+			$task = $taskList->getTask();
+			$task->confirm();
+			
+			// check if task list is empty and was removed
+			$length = $taskList->getLength();
+			$this->assertEquals($length, $qty - $i, "check task list size after $i confirmed tasks ");
+			
+		};
+		
+		// check if task list is empty and was removed
+		$qtyAll = $taskList->getLength();
+		$this->assertEquals($qtyAll, 0, 'check task list size after confirmed all tasks');
+		
+		return $task;
 	}
 
 }
