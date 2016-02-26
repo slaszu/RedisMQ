@@ -58,7 +58,7 @@ class TaskList
 		/**
 		 * get first
 		 */
-		$checkMessage = $this->queue->getClient()->lrange($this->getName(),0,0);
+		$checkMessage = $this->queue->getClient()->lrange($this->getName(),-1,-1); // get last item from list
 		
 		$messageToCheck = new \RedisMq\Message();
 		$messageToCheck->setFromString($checkMessage[0]);

@@ -4,7 +4,7 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 {
 
 	protected $client = null;
-	protected $message = null;
+	protected static $message = null;
 
 	public function setUp()
 	{
@@ -14,32 +14,35 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 			'port' => REDIS_SERVER_PORT,
 		]);
 
-		$this->message[] = new \RedisMq\Message([
-			'x' => 1,
-			'y' => [
-				'y1' => 11,
-				'y2' => 22
-			],
-			'rand' => rand(10000, 99999)
-		]);
+		if (self::$message === null) {
 
-		$this->message[] = new \RedisMq\Message([
-			'x' => 2,
-			'string' => 'Message number 2',
-			'rand' => rand(10000, 99999)
-		]);
-		
-		$this->message[] = new \RedisMq\Message([
-			'x' => 3,
-			'string' => 'Message number 3',
-			'rand' => rand(10000, 99999)
-		]);
-		
-		$this->message[] = new \RedisMq\Message([
-			'x' => 4,
-			'string' => 'Message number 4',
-			'rand' => rand(10000, 99999)
-		]);
+			self::$message[] = new \RedisMq\Message([
+				'x' => 1,
+				'y' => [
+					'y1' => 11,
+					'y2' => 22
+				],
+				'rand' => rand(10000, 99999)
+			]);
+
+			self::$message[] = new \RedisMq\Message([
+				'x' => 2,
+				'string' => 'Message number 2',
+				'rand' => rand(10000, 99999)
+			]);
+
+			self::$message[] = new \RedisMq\Message([
+				'x' => 3,
+				'string' => 'Message number 3',
+				'rand' => rand(10000, 99999)
+			]);
+
+			self::$message[] = new \RedisMq\Message([
+				'x' => 4,
+				'string' => 'Message number 4',
+				'rand' => rand(10000, 99999)
+			]);
+		}
 	}
 
 	public function testQueueInit()
@@ -50,11 +53,11 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 		/**
 		 * clear queue
 		 */
-		$keys = $queue->getClient()->keys($name.'*');
-		foreach($keys as $key) {
+		$keys = $queue->getClient()->keys($name . '*');
+		foreach ($keys as $key) {
 			$queue->getClient()->del($key);
 		}
-		
+
 		$length = $queue->getClient()->llen($name);
 
 		$this->assertEquals($name, $queue->getName());
@@ -70,16 +73,16 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 	public function testAddMessage(\RedisMq\Queue $queue)
 	{
 
-		foreach ($this->message as $m) {
+		foreach (self::$message as $m) {
 			$queue->addMessage($m);
 			$checkMessage = $queue->getClient()->lrange($queue->getName(), 0, 0);
 			$messageToCheck = new \RedisMq\Message();
 			$messageToCheck->setFromString($checkMessage[0]);
 			$this->assertEquals($m, $messageToCheck);
 		}
-		
+
 		$qty = $queue->getLength();
-		$this->assertEquals($qty, count($this->message));
+		$this->assertEquals($qty, count(self::$message));
 
 
 		return $queue;
@@ -91,16 +94,33 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 	 */
 	public function testGetTaskList(\RedisMq\Queue $queue)
 	{
-		$taskQty = floor(count($this->message) / 2);
-		$queueQty = count($this->message) - $taskQty;
-		
+		$taskQty = floor(count(self::$message) / 2);
+		$queueQty = count(self::$message) - $taskQty;
+
 		$taskList = $queue->getTaskList($taskQty);
 
 		$this->assertNotEmpty($taskList->getName());
 		$this->assertEquals($queue, $taskList->getQueue());
 		$this->assertEquals($taskList->getLength(), $taskQty, 'check task list size');
 		$this->assertEquals($queue->getLength(), $queueQty, 'check queue size');
+
+		return $taskList;
+	}
+
+	/**
+	 * @depends testGetTaskList
+	 * @param \RedisMq\TaskList $taskList
+	 */
+	public function testGetFirstTask(\RedisMq\TaskList $taskList)
+	{
+		$task = $taskList->getTask();
+		$message = $task->getMessage();
+		$this->assertEquals($message, self::$message[0], 'check first task');
 		
+		// secound time should be the same message
+		$task = $taskList->getTask();
+		$message = $task->getMessage();
+		$this->assertEquals($message, self::$message[0], 'check first task again');
 	}
 
 }
