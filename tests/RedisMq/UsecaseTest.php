@@ -2,7 +2,7 @@
 
 class QueueTest extends \PHPUnit_Framework_TestCase
 {
-
+	protected $queueName = 'phpunit_tests';
 	protected $client = null;
 	protected static $message = null;
 
@@ -47,7 +47,7 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 
 	public function testQueueInit()
 	{
-		$name = 'phpunit_tests';
+		$name = $this->queueName;
 		$queue = new \RedisMq\Queue($this->client, $name);
 
 		/**
@@ -168,7 +168,37 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 		$res = $client->hget($queueTaskListsName, $taskListName);
 		$this->assertNull($res);
 		
-		return $task;
+		return $taskList;
 	}
 
+	
+	/**
+	 * @depends testTasksConfirm
+	 * @param \RedisMq\TaskList $taskList
+	 */
+	public function testRepairQueue(\RedisMq\TaskList $taskList)
+	{
+		$queue = $taskList->getQueue();
+		$newTaskList = $queue->getTaskList();
+		
+		$this->assertEquals($queue->getLength(), 0, 'check queue after last task list get');
+		
+		/**
+		 * now is queue and task list
+		 * but exception occured and worker for task list stop working
+		 * for this kind of task list we need put all data back again to top of queue
+		 */
+		
+		// we dont now taks list name
+		$newTaskList = null;
+		
+		// we know only queue name
+		$name = $this->queueName;
+		
+		$queue = new \RedisMq\Queue($this->client, $name);
+		//$res = $queue->repairTaskLists(-1);
+		
+		//var_dump($res);
+	}
+	
 }

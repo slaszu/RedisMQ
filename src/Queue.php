@@ -136,4 +136,61 @@ class Queue
 		
 	}
 
+	/**
+	 * Return number of repaired task lists for this queue
+	 * 
+	 * @param int $taskOlderThat
+	 * @return int
+	 */
+	public function repairTaskLists($taskOlderThatSeconds)
+	{
+		/**
+		 * get all queue task list for this queue name
+		 */
+		
+		$queueTaskListsName = $this->getQueueTaskListsName();
+		
+		$now = time();
+		
+		$script = '
+				local queueNameTaskList = KEYS[1]
+				local taskListUniqueName = KEYS[2]
+				local queueName = KEYS[3]
+
+				-- copy all from taskListUniqueName to queueName
+				local messages = redis.call("lrange",taskListUniqueName, 0, -1)
+				for key,message in pairs(messages) do
+					redis.call("rpush",queueName,message)
+				end
+				
+				-- remove taskListUniqueName
+				redis.call("del",taskListUniqueName)
+				
+				-- remove taskListUniqueName from  queueNameTaskList
+				redis.call("hdel",queueNameTaskList,taskListUniqueName)
+				
+				return 1
+			';
+		
+		$client = $this->getClient();
+		$keys = $client->keys($this->getName().':*');
+		
+		$qty = 0;
+		foreach($keys as $key) {
+			$timestamp = $client->hget($queueTaskListsName ,$key);
+			
+			if ($timestamp + $taskOlderThatSeconds < $now) {
+				/**
+				 * copy all from task list "$key" to queue
+				 * remove task list "$key"
+				 * remove task list from queue task lists
+				 */
+				$client->eval($script, 2, $queueTaskListsName, $key, $this->getName());
+				$qty ++;
+			}
+		}
+		
+		return $qty;
+	}
+	
 }
