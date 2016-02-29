@@ -102,13 +102,11 @@ class Queue
 				local is_unique = redis.call("exists", taskListUniqueName)
 				if is_unique == 1 then return 0 end
 				
-				local messages = redis.call("lrange",queueName, - size, -1)
-				for key,message in pairs(messages) do
-					redis.call("rpush",taskListUniqueName,message)
+				for i=1,size do
+					redis.call("RPOPLPUSH",queueName,taskListUniqueName)
 				end
 				
 				redis.call("hset",queueNameTaskList,taskListUniqueName,timestamp)
-				redis.call("ltrim",queueName,0,size - 1) -- zero based index
 				return 1
 			';
 
@@ -139,7 +137,7 @@ class Queue
 	/**
 	 * Return number of repaired task lists for this queue
 	 * 
-	 * @param int $taskOlderThat
+	 * @param int $taskOlderThatSeconds
 	 * @return int
 	 */
 	public function repairTaskLists($taskOlderThatSeconds)
@@ -177,6 +175,7 @@ class Queue
 		
 		$qty = 0;
 		foreach($keys as $key) {
+			
 			$timestamp = $client->hget($queueTaskListsName ,$key);
 			
 			if ($timestamp + $taskOlderThatSeconds < $now) {
@@ -185,8 +184,9 @@ class Queue
 				 * remove task list "$key"
 				 * remove task list from queue task lists
 				 */
-				$client->eval($script, 2, $queueTaskListsName, $key, $this->getName());
+				$client->eval($script, 3, $queueTaskListsName, $key, $this->getName());
 				$qty ++;
+				
 			}
 		}
 		

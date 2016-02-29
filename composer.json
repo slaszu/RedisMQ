@@ -1,4 +1,7 @@
 {
+	"name": "redismq/redismq",
+    "type": "library",
+    "description": "RedisMQ implemented in PHP",
 	"require-dev": {
 		"phpunit/phpunit": "^4.0",
 		"predis/predis": "^1.0"
