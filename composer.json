@@ -8,7 +8,7 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"RedisMq\\": "src/"
+			"RedisMq\\": "RedisMq/"
 		}
 	}
 }
