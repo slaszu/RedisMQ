@@ -2,6 +2,7 @@
 
 class QueueTest extends \PHPUnit_Framework_TestCase
 {
+
 	protected $queueName = 'phpunit_tests';
 	protected $client = null;
 	protected static $message = null;
@@ -116,25 +117,25 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 		$task = $taskList->getTask();
 		$message = $task->getMessage();
 		$this->assertEquals($message, self::$message[0], 'check first task');
-		
+
 		// secound time should be the same message
 		$task = $taskList->getTask();
 		$message = $task->getMessage();
 		$this->assertEquals($message, self::$message[0], 'check first task again');
-		
+
 		/**
 		 * test message body
 		 */
 		$body = $message->getBody();
-		
-		$this->assertInternalType('array',$body);
+
+		$this->assertInternalType('array', $body);
 		$this->assertArrayHasKey('x', $body);
-		$this->assertEquals($body['x'],1);
-		
-		
+		$this->assertEquals($body['x'], 1);
+
+
 		return $taskList;
 	}
-	
+
 	/**
 	 * @depends testGetFirstTask
 	 * @param \RedisMq\TaskList $taskList
@@ -144,34 +145,33 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 		$client = $taskList->getQueue()->getClient();
 		$queueTaskListsName = $taskList->getQueue()->getQueueTaskListsName();
 		$taskListName = $taskList->getName();
-		
+
 		$qty = $taskList->getLength();
-		
-		for($i = 1; $i <= $qty; $i++) {
+
+		for ($i = 1; $i <= $qty; $i++) {
 			// queue task list shoud contain this task list
 			$res = $client->hget($queueTaskListsName, $taskListName);
 			$this->assertNotNull($res);
-			
+
 			$task = $taskList->getTask();
 			$task->confirm();
-			
+
 			// check if task list is empty and was removed
 			$length = $taskList->getLength();
 			$this->assertEquals($length, $qty - $i, "check task list size after $i confirmed tasks ");
 		}
-		
+
 		// check if task list is empty and was removed
 		$qtyAll = $taskList->getLength();
 		$this->assertEquals($qtyAll, 0, 'check task list size after confirmed all tasks');
-		
+
 		// queue task list shoud not contain this task list
 		$res = $client->hget($queueTaskListsName, $taskListName);
 		$this->assertNull($res);
-		
+
 		return $taskList;
 	}
 
-	
 	/**
 	 * @depends testTasksConfirm
 	 * @param \RedisMq\TaskList $taskList
@@ -179,26 +179,35 @@ class QueueTest extends \PHPUnit_Framework_TestCase
 	public function testRepairQueue(\RedisMq\TaskList $taskList)
 	{
 		$queue = $taskList->getQueue();
-		$newTaskList = $queue->getTaskList();
-		
-		$this->assertEquals($queue->getLength(), 0, 'check queue after last task list get');
-		
+
 		/**
-		 * now is queue and task list
-		 * but exception occured and worker for task list stop working
-		 * for this kind of task list we need put all data back again to top of queue
+		 * we create new task list
 		 */
-		
-		// we dont now taks list name
+		$newTaskList = $queue->getTaskList();
+		$taskListLength = $newTaskList->getLength();
+		$this->assertGreaterThan(0, $taskListLength, 'check task list');
+
+		/**
+		 * queue is empty
+		 */
+		$this->assertEquals($queue->getLength(), 0, 'check queue after last task list get');
+
+		/**
+		 * error occured and worker for task list is crashed
+		 */
 		$newTaskList = null;
-		
-		// we know only queue name
+
+		/**
+		 * we know only queue name
+		 */
 		$name = $this->queueName;
-		
+
 		$queue = new \RedisMq\Queue($this->client, $name);
-		//$res = $queue->repairTaskLists(-1);
-		
-		//var_dump($res);
+		$res = $queue->repairTaskLists(5);
+		$this->assertEquals($res, 0, 'non task list was repair because of 5 secund time');
+
+		$res = $queue->repairTaskLists(-5);
+		$this->assertEquals($res, 1, 'all tasks from task list was repair');
 	}
-	
+
 }
