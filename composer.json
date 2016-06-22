@@ -2,6 +2,7 @@
 	"name": "slaszu/redismq",
     "type": "library",
     "description": "Implementation of Pattern 'Reliable queue', using php and Redis",
+	"license": "MIT",
 	"require": {
 		"php": ">=5.4"
 	},
