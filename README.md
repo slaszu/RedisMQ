@@ -72,10 +72,12 @@ When you get TaskList from Queue, then Tasks are moved from Queue to TaskList.
 Task which are in TaskList not exist any longer in Queue.
 
 In some situations you may want to move task from TaskList back to Queue.
-To do this use **repairTaskLists** method. This method takes one param (time in seconds).
+To do this use **repairTaskLists** method.
+This method takes one param (time in seconds).
 This is the minimum time that has elapsed since the creation of TaskLists.
 This method check all Task Lists that was created from Queue.
-Important: if all Tasks from TaskList are confirmed, then this TaskList is empty and Redis remove this task immediately.  
+
+**Important**: if all Tasks from TaskList are confirmed, then this TaskList is empty and Redis remove this task immediately.
 
 ```
 $queue = new \RedisMq\Queue($this->client, $name);
