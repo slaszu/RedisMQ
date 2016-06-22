@@ -1,7 +1,10 @@
 {
-	"name": "redismq/redismq",
+	"name": "slaszu/redismq",
     "type": "library",
-    "description": "RedisMQ implemented in PHP",
+    "description": "Implementation of Pattern 'Reliable queue', using php and Redis",
+	"require": {
+		"php": ">=5.4"
+	},
 	"require-dev": {
 		"phpunit/phpunit": "^4.0",
 		"predis/predis": "^1.0"
