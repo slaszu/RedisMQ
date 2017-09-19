@@ -1,4 +1,4 @@
-# Implementation of Pattern "Reliable queue", using php and Redis
+# Implementation of Pattern "Reliable queue", task queue using php and Redis
 
 ## Install by composer
 
