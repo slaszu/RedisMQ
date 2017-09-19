@@ -1,9 +1,9 @@
-#Implementation of Pattern "Reliable queue", using php and Redis
+# Implementation of Pattern "Reliable queue", using php and Redis
 
-##Important
+## Important
 All examples you can find in tests/UsecaseTest.php
 
-##Configuration
+## Configuration
 This library use [Predis](https://github.com/nrk/predis) to connect to Redis server.
 So we need predis object in examples below
 
@@ -15,13 +15,13 @@ $this->client = new \Predis\Client([
 ]);
 ```
 
-##Create a queue
+## Create a queue
 
 ```
 $queue = new \RedisMq\Queue($this->client, $name);
 ```
 
-##Add task (message) to queue
+## Add task (message) to queue
 
 ```
 // eg. this is message with array, but message could be a simple string either
@@ -33,15 +33,15 @@ $message = new \RedisMq\Message([
 $queue->addMessage($message);
 ```
 
-##Play with tasks
-###Get list of tasks to process
+## Play with tasks
+### Get list of tasks to process
 
 ```
 $taskQty = 100;
 $taskList = $queue->getTaskList($taskQty);
 ```
 
-###Get task detail
+### Get task detail
 
 ```
 $task = $taskList->getTask();
@@ -51,7 +51,7 @@ $body = $messageArray->getBody();
 //variable $body is an array given in section "Add task (message) to queue"
 ```
 
-###Confirm task
+### Confirm task
 
 ```
 $task = $taskList->getTask();
@@ -67,7 +67,7 @@ $task->confirm();
 
 Task is removed from queue after confirmation.
 
-##Repair queue
+## Repair queue
 When you get TaskList from Queue, then Tasks are moved from Queue to TaskList.
 Task which are in TaskList not exist any longer in Queue.
 
