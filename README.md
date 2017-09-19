@@ -1,5 +1,11 @@
 # Implementation of Pattern "Reliable queue", using php and Redis
 
+## Install by composer
+
+```
+composer require slaszu/redismq
+```
+
 ## Important
 All examples you can find in tests/UsecaseTest.php
 
