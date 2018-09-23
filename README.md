@@ -1,5 +1,7 @@
 # Implementation of Pattern "Reliable queue", task queue using php and Redis
 
+The idea is taken from [Redis Documentation](https://redis.io/commands/rpoplpush#pattern-reliable-queue)
+
 ## Install by composer
 
 ```
